@@ -1,5 +1,6 @@
 import NavbarMobile from "../NavbarMobile";
 import NavbarDesktop from "../NavbarDesktop";
+import HeroSection from "../HeroSection";
 
 function Hero() {
   return (
@@ -8,11 +9,7 @@ function Hero() {
         <NavbarMobile />
         <NavbarDesktop />
       </header>
-      <section className="hero">
-        <h1>Elektriker Jansson</h1>
-        <p>Din pålitliga partner för alla elarbeten</p>
-        <a className="button button--cta" href="#">BÖRJA DIN PLANERING</a>
-      </section>
+      <HeroSection />
     </div>
   )
 }

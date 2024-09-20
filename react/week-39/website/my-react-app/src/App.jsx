@@ -2,14 +2,21 @@ import Hero from './components/Hero'
 import Article from './components/Article'
 import Footer from './components/Footer'
 import './App.css'
+import HeroImg from './components/HeroImg'
+import Service from './components/Service'
+import Invoice from './components/Invoice'
 
 function App() {
   return (
     <>
       <Hero />
       <main>
-        <section className="hero-livingroom"></section>
+        <HeroImg />
+
         <Article />
+        <Service />
+        
+        <Invoice />
       </main>
 
       <Footer />
