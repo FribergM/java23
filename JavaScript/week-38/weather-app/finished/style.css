@@ -5,12 +5,13 @@ main {
   align-items: center;
 
   padding-top: 2rem;
+  text-align: center;
 }
 div {
   padding-top: 1rem;
 }
 button {
-  margin-left: 150px;
+  max-width: 150px;
 }
 #tempratur {
   font-weight: 700;

@@ -1,4 +1,5 @@
 let currentDayIndex = new Date().getDate();
+let dayNameIndex = new Date().getDay();
 
 async function fetchWeather(path) {
   const data = await fetch(path)
@@ -14,7 +15,7 @@ async function renderWeather(dayIndex) {
   console.log(weatherData)
 
   const todaysDate = new Date();
-  const dayName = getDayName(todaysDate.getDay());
+  const dayName = getDayName(dayNameIndex);
   const currentTime = formatTime(todaysDate);
   const formattedDate = formatDate(todaysDate);
   const currentDay = getCurrentDay(dayIndex);
@@ -44,7 +45,7 @@ async function renderWeather(dayIndex) {
   }
 }
 
-renderWeather(currentDayIndex)
+renderWeather(currentDayIndex, dayNameIndex)
 
 function getCurrentDay(dayIndex) {
   return String(dayIndex).padStart(2, '0')
@@ -71,6 +72,8 @@ button.addEventListener('click', handleClick)
 
 function handleClick() {
   currentDayIndex++
+  dayNameIndex++
   if (currentDayIndex > 31) currentDayIndex = 1;
-  renderWeather(currentDayIndex);
+  if(dayNameIndex> 6) dayNameIndex = 0;
+  renderWeather(currentDayIndex, dayNameIndex);
 };
