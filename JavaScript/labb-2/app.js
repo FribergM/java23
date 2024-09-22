@@ -1,16 +1,21 @@
 const menuUrl = "./data/menu.json";
 const specialsUrl = "./data/specials.json";
-const currentDay = new Date().getDay();
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const weekdaysSwe = ["Söndag", "Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag"];
+const currentDay = new Date().getDay();
+const priorDay = getYesterday();
 const today = weekdays[currentDay];
-const todaySwe = weekdaysSwe[currentDay];
+const yesterday = weekdays[priorDay];
+const specialState = {specialAlreadyRendered: false}
 
 main();
 
 function main(){
     handleMenu();
     handleSpecial();
+    handleSidebar();
+}
+async function handleSidebar(){
+
 }
 
 async function handleSpecial(){
@@ -18,72 +23,95 @@ async function handleSpecial(){
 
     const weeklySpecials = specialsData.weeklySpecialsMenu;
     const todaysSpecials = weeklySpecials[today];
+    
+    let specialToRender = filterSpecials(todaysSpecials)
+
+    let isTodaysSpecial = true;
+
+    renderSpecial(specialToRender, isTodaysSpecial);
+    
+    const buttonYesterday = document.querySelector('.button--specials');
+
+    buttonYesterday.addEventListener('click', () => {
+        
+        isTodaysSpecial = !isTodaysSpecial;
+        buttonYesterday.textContent = isTodaysSpecial ? "Gårdagens" : "Dagens";
+        
+        if(isTodaysSpecial){
+            specialToRender = filterSpecials(todaysSpecials);
+        }else{
+            const yesterdaysSpecials = weeklySpecials[yesterday];
+        
+            specialToRender = filterSpecials(yesterdaysSpecials)
+        }
+        
+        renderSpecial(specialToRender,isTodaysSpecial);
+    })
+}
+
+function filterSpecials(daysSpecials){
     const lunchTime = "11:00-14:00";
     const dinnerTime = "17:00-20:00";
-
-    console.log(new Date().getHours())
     const currentHour = new Date().getHours();
-
-    let specialToRender;
+    let special;
     let isLunch;
 
     if(currentHour < 11){
-        //render lunch special
-        specialToRender = todaysSpecials.filter(special => special.time === lunchTime)[0];
-        console.log(specialToRender.name)
-        
+        special = daysSpecials.filter(special => special.time === lunchTime)[0];
         isLunch = true;
-        renderSpecial(specialToRender,isLunch);
     }else{
-        //render dinner special
-        specialToRender = todaysSpecials.filter(special => special.time === dinnerTime)[0];
-        console.log(specialToRender)
-
+        special = daysSpecials.filter(special => special.time === dinnerTime)[0];
         isLunch = false;
-        renderSpecial(specialToRender,isLunch);
     }
+    return {special, isLunch}
 }
 
-function renderSpecial(special, isLunch){
+function renderSpecial(specialToRender, isTodaysSpecial){
+    //TODO Refactor into multiple functions if I have time.
+    const special = specialToRender.special;
+    const isLunch = specialToRender.isLunch;
 
-    if(special){
-        const loadGif = document.querySelector('#js-loading');
-        loadGif.classList.add('hidden');
-    }
+    if(!special) return;
+
+    const loadGif = document.querySelector('#js-loading');
+    loadGif.classList.add('hidden');
 
     const specialsContainer = document.querySelector('#specials__content');
     specialsContainer.classList.add('specials__content--loaded');
 
     const specialsH2 = document.querySelector('#specials-title');
 
+    let dayText = isTodaysSpecial ? "Dagens": "Gårdagens";
+    specialsH2.textContent = isLunch ? 
+        `${dayText}`+" Lunch 11:00 - 14:00" : 
+        `${dayText}`+" Middag 17:00 - 20:00";
 
-
-    if(isLunch){
-        specialsH2.textContent = "Dagens Lunch 11:00 - 14:00";
-    }else{
-        specialsH2.textContent = "Dagens Middag 17:00 - 20:00";
+    if(!specialState.specialAlreadyRendered){
+        const specialsContainer2 = document.createElement('div');
+        specialsContainer2.classList.add('specials__header');
+        const dishName = document.createElement('p');
+        dishName.id = 'dishName';
+        const dishPrice = document.createElement('p');
+        dishPrice.id = 'dishPrice';
+        const dishDesc = document.createElement('p');
+        dishDesc.id = 'dishDesc'
+        
+        specialsContainer2.appendChild(dishName);
+        specialsContainer2.appendChild(dishPrice);
+        specialsContainer.appendChild(specialsContainer2);
+        specialsContainer.appendChild(dishDesc);
     }
-
-    const specialsContainer2 = document.createElement('div');
-    specialsContainer2.classList.add('specials__header');
-    const dishName = document.createElement('p');
-    const dishPrice = document.createElement('p');
-    const dishDesc = document.createElement('p');
-
-    dishName.textContent = `${special.name}`;
-    dishPrice.textContent = `${special.price + "kr"}`;
-    dishDesc.textContent = `${special.description}`;
     
-    
-    specialsContainer2.appendChild(dishName);
-    specialsContainer2.appendChild(dishPrice);
-    specialsContainer.appendChild(specialsContainer2);
-    specialsContainer.appendChild(dishDesc);
+    document.querySelector('#dishName').textContent = `${special.name}`;
+    document.querySelector('#dishPrice').textContent = `${special.price + "kr"}`;
+    document.querySelector('#dishDesc').textContent = `${special.description}`;
 
-    // TODO CONTINUE HERE
-
-    
+    specialState.specialAlreadyRendered = true;
 }
+
+/******************************************************
+Normal menu
+ ******************************************************/
 
 async function handleMenu(){
     const menuData = await fetchData(menuUrl);
@@ -172,4 +200,12 @@ function setActiveButton(activeButton){
     });
 
     activeButton.classList.add('options--active');
+}
+
+function getYesterday(){
+    let day = currentDay-1;
+    if(day < 0){
+        day = 6;
+    }
+    return day;
 }
