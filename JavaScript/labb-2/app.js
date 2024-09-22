@@ -231,7 +231,6 @@ async function handleSidebar(){
 function renderSidebarMenu(weeklySpecials){
     const weekdays =  ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag","Söndag"];
     let weekdayIndex = 0;
-    console.log(weeklySpecials)
 
     const sideMenu = document.querySelector('#specials-menu');
 
