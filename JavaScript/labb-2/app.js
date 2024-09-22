@@ -7,6 +7,8 @@ const today = weekdays[currentDay];
 const yesterday = weekdays[priorDay];
 const specialState = {specialAlreadyRendered: false}
 
+//TODO Move variables into functions instead(?)
+
 main();
 
 function main(){
@@ -14,9 +16,95 @@ function main(){
     handleSpecial();
     handleSidebar();
 }
-async function handleSidebar(){
+
+async function fetchData(url){
+    const data = await fetch(url)
+    .then(response => response.json());
+
+    return data;
+}
+
+/******************************************************
+Normal menu
+******************************************************/
+
+async function handleMenu(){
+    const menuData = await fetchData(menuUrl);
+
+    const grillMenu = menuData.Grill;
+    const snacksMenu = menuData.Snacks;
+    const drinksMenu = menuData.Drycker;
+
+    const menuButtons = document.querySelectorAll('.options');
+
+    menuButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const buttonValue = this.value; 
+    
+            setActiveButton(this);
+
+            if (buttonValue === "Grill") {
+                renderMenu(grillMenu, "Grill");
+            } else if (buttonValue === "Snacks") {
+                renderMenu(snacksMenu, "Snacks");
+            } else if (buttonValue === "Drycker") {
+                renderMenu(drinksMenu, "Drycker");
+            }
+        });
+    });
+
+    setActiveButton(menuButtons[0]);
+    renderMenu(grillMenu, "Grill");
 
 }
+
+function renderMenu(menu, menuTitle){
+    const menuContainer = document.querySelector('#content');
+    menuContainer.textContent = null;
+
+    const menuHeader = document.createElement('h2');
+    menuHeader.textContent = menuTitle;
+    
+    const menuUl = document.createElement('ul');
+
+    menuContainer.appendChild(menuHeader);
+    menuContainer.appendChild(menuUl);
+    
+    menu.forEach(item => {
+        const menuLi = document.createElement('li');
+        menuLi.classList.add('menu__option');
+
+        const menuItemContainer = document.createElement('div');
+        menuItemContainer.classList.add('menu__title');
+
+        const dishName = document.createElement('h3');
+        dishName.classList.add('dish__name');
+        dishName.textContent = item.name;
+
+        const separator = document.createElement('div');
+        separator.classList.add('separator');
+
+        const dishPrice = document.createElement('h3');
+        dishPrice.classList.add('dish__price');
+        dishPrice.textContent = item.price +"kr";
+        
+        const description = document.createElement('p');
+        description.textContent = item.description;
+
+        menuItemContainer.appendChild(dishName);
+        menuItemContainer.appendChild(separator);
+        menuItemContainer.appendChild(dishPrice);
+
+        menuLi.appendChild(menuItemContainer);
+        menuLi.appendChild(description);
+    
+        menuUl.appendChild(menuLi);
+    });
+}
+
+/******************************************************
+Daily special
+******************************************************/
 
 async function handleSpecial(){
     const specialsData = await fetchData(specialsUrl);
@@ -56,7 +144,7 @@ function filterSpecials(daysSpecials){
     let special;
     let isLunch;
 
-    if(currentHour < 11){
+    if(currentHour < 15){
         special = daysSpecials.filter(special => special.time === lunchTime)[0];
         isLunch = true;
     }else{
@@ -110,87 +198,64 @@ function renderSpecial(specialToRender, isTodaysSpecial){
 }
 
 /******************************************************
-Normal menu
- ******************************************************/
+Sidebar Menu
+******************************************************/
 
-async function handleMenu(){
-    const menuData = await fetchData(menuUrl);
+async function handleSidebar(){
+    const specialsData = await fetchData(specialsUrl);
+    const weeklySpecials = specialsData.weeklySpecialsMenu;
 
-    const grillMenu = menuData.Grill;
-    const snacksMenu = menuData.Snacks;
-    const drinksMenu = menuData.Drycker;
+    let navIsOpen = false;
+    const navButton = document.querySelector('.menu-toggle');
+    const sideMenu = document.querySelector('#specials-menu');
 
-    const menuButtons = document.querySelectorAll('.options');
-
-    menuButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const buttonValue = this.value; 
+    renderSidebarMenu(weeklySpecials);
     
-            setActiveButton(this);
+    navButton.addEventListener('click', () => {
 
-            if (buttonValue === "Grill") {
-                renderMenu(grillMenu, "Grill");
-            } else if (buttonValue === "Snacks") {
-                renderMenu(snacksMenu, "Snacks");
-            } else if (buttonValue === "Drycker") {
-                renderMenu(drinksMenu, "Drycker");
-            }
-        });
+        navIsOpen = !navIsOpen;
+
+        if(navIsOpen){
+            navButton.classList.add('nav-open');
+            sideMenu.classList.add('specials__menu--open')
+        }else{
+            navButton.classList.remove('nav-open');
+            sideMenu.classList.remove('specials__menu--open')
+        }
+
     });
-
-    setActiveButton(menuButtons[0]);
-    renderMenu(grillMenu, "Grill");
-
 }
 
-async function fetchData(url){
-    const data = await fetch(url)
-    .then(response => response.json());
+function renderSidebarMenu(weeklySpecials){
+    const weekdays =  ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag","Söndag"];
+    let weekdayIndex = 0;
+    console.log(weeklySpecials)
 
-    return data;
-}
+    const sideMenu = document.querySelector('#specials-menu');
 
-function renderMenu(menu, menuTitle){
-    const menuContainer = document.querySelector('#content');
-    menuContainer.textContent = null;
-    const menuHeader = document.createElement('h2');
-    menuHeader.textContent = menuTitle;
-    
-    const menuUl = document.createElement('ul');
+    for(const day in weeklySpecials){
 
-    menuContainer.appendChild(menuHeader);
-    menuContainer.appendChild(menuUl);
-    
-    menu.forEach(item => {
-        const menuLi = document.createElement('li');
-        menuLi.classList.add('menu__option');
+        const dayContainer = document.createElement('div');
+        dayContainer.classList.add('specials__day');
 
-        const menuItemContainer = document.createElement('div');
-        menuItemContainer.classList.add('menu__title');
+        const dayHeader = document.createElement('h4');
+        dayHeader.textContent = weekdays[weekdayIndex];
+        dayContainer.appendChild(dayHeader);
 
-        const dishName = document.createElement('h3');
-        dishName.classList.add('dish__name');
-        dishName.textContent = item.name;
+        const specials = weeklySpecials[day];
 
-        const separator = document.createElement('div');
-        separator.classList.add('separator');
+        specials.forEach(special => {
+            const mealType = special.time.includes("11:00-14:00") ? "Lunch":"Middag";
+            
+            const specialPara = document.createElement('p');
+            specialPara.textContent = `${mealType}: ${special.name} - ${special.price}kr`;
 
-        const dishPrice = document.createElement('h3');
-        dishPrice.classList.add('dish__price');
-        dishPrice.textContent = item.price +"kr";
-        
-        const description = document.createElement('p');
-        description.textContent = item.description;
+            dayContainer.appendChild(specialPara);
+        })
+        sideMenu.appendChild(dayContainer);
+        weekdayIndex++;
+    }
 
-        menuItemContainer.appendChild(dishName);
-        menuItemContainer.appendChild(separator);
-        menuItemContainer.appendChild(dishPrice);
-
-        menuLi.appendChild(menuItemContainer);
-        menuLi.appendChild(description);
-    
-        menuUl.appendChild(menuLi);
-    });
 }
 
 function setActiveButton(activeButton){
