@@ -1,13 +1,7 @@
 const menuUrl = "./data/menu.json";
 const specialsUrl = "./data/specials.json";
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const currentDay = new Date().getDay();
-const priorDay = getYesterday();
-const today = weekdays[currentDay];
-const yesterday = weekdays[priorDay];
 const specialState = {specialAlreadyRendered: false}
-
-//TODO Move variables into functions instead(?)
 
 main();
 
@@ -53,7 +47,6 @@ async function handleMenu(){
         });
     });
 
-    setActiveButton(menuButtons[0]);
     renderMenu(grillMenu, "Grill");
 
 }
@@ -102,6 +95,15 @@ function renderMenu(menu, menuTitle){
     });
 }
 
+function setActiveButton(activeButton){
+    const menuButtons = document.querySelectorAll('.options');
+    menuButtons.forEach(button => {
+        button.classList.remove('options--active');
+    });
+
+    activeButton.classList.add('options--active');
+}
+
 /******************************************************
 Daily special
 ******************************************************/
@@ -110,7 +112,7 @@ async function handleSpecial(){
     const specialsData = await fetchData(specialsUrl);
 
     const weeklySpecials = specialsData.weeklySpecialsMenu;
-    const todaysSpecials = weeklySpecials[today];
+    const todaysSpecials = weeklySpecials[getTodayName()];
     
     let specialToRender = filterSpecials(todaysSpecials)
 
@@ -128,7 +130,7 @@ async function handleSpecial(){
         if(isTodaysSpecial){
             specialToRender = filterSpecials(todaysSpecials);
         }else{
-            const yesterdaysSpecials = weeklySpecials[yesterday];
+            const yesterdaysSpecials = weeklySpecials[getYesterdayName()];
         
             specialToRender = filterSpecials(yesterdaysSpecials)
         }
@@ -140,7 +142,7 @@ async function handleSpecial(){
 function filterSpecials(daysSpecials){
     const lunchTime = "11:00-14:00";
     const dinnerTime = "17:00-20:00";
-    const currentHour = new Date().getHours();
+    const currentHour = getCurrentHour();
     let special;
     let isLunch;
 
@@ -258,19 +260,26 @@ function renderSidebarMenu(weeklySpecials){
 
 }
 
-function setActiveButton(activeButton){
-    const menuButtons = document.querySelectorAll('.options');
-    menuButtons.forEach(button => {
-        button.classList.remove('options--active');
-    });
-
-    activeButton.classList.add('options--active');
+function getCurrentDay() {
+    return new Date().getDay(); // Returns index of the current day (0 for Sunday, 1 for Monday, etc.)
 }
 
 function getYesterday(){
-    let day = currentDay-1;
-    if(day < 0){
-        day = 6;
+    let yesterday = getCurrentDay()-1;
+    if(yesterday < 0){
+        yesterday = 6;
     }
-    return day;
+    return yesterday;
+}
+
+function getTodayName() {
+return weekdays[getCurrentDay()];
+}
+
+function getYesterdayName() {
+return weekdays[getYesterday()];
+}
+
+function getCurrentHour() {
+return new Date().getHours();
 }
